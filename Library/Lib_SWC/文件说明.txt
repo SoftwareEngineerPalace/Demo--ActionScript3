@@ -1,0 +1,2 @@
+as3corelib.swc there is MD5 in it
+as3crypto.swc  encryption

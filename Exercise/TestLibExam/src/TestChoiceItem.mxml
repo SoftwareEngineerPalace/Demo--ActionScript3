@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="1000" width="800"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.ChoiceItemComp;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				item0 = new ChoiceItemComp();
+				item0.fullData = "asdasd";
+				qg.addElement(item0);
+				item0.y = 300;
+				item0.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+			}
+			
+			public var item0:ChoiceItemComp;
+			
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("------ img ------");
+				
+				item0.fullData = "image#http://192.168.100.2/examgfs/53abf136e4b02e5d44e07444";
+				trace(item0.fullData);
+			}
+			
+			protected function btn2_clickHandler(event:MouseEvent):void
+			{
+				trace("------ formula ------");
+				
+				item0.fullData = "formula#\\frac{2}{3}";
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("------ image ------");
+				
+				item0.fullData = "isadfasdasdg";
+			}
+			
+			protected function btn4_clickHandler(event:MouseEvent):void
+			{
+				trace("------ item size ------");
+				
+				trace("  : " + item0.width + ", " + item0.height)
+				trace("c : " + item0.contentWidth + ", " + item0.contentHeight);
+				trace("m : " + item0.measuredWidth + ", " + item0.measuredHeight);
+				trace("ex: " + item0.explicitWidth + ", " + item0.explicitHeight);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="110" y="10"
+			 width="580" height="406">
+	</s:Group>
+	<s:Button x="10" y="10" label="image"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="44" label="formula"
+			  id="btn2"
+			  click="btn2_clickHandler(event)"/>
+	<s:Button x="10" y="80" label="text"
+			  id="btn3"
+			  click="btn3_clickHandler(event)"/>
+	<s:Button x="10" y="125" label="itemSize"
+			  id="btn4"
+			  click="btn4_clickHandler(event)"/>
+	
+	
+</s:Application>

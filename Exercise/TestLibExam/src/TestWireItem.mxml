@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="900" width="900"
+			   creationComplete="creationCompleteHandler(event)" xmlns:controls="com.flextoolbox.controls.*"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.WireItemComp;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			
+			
+			public var item1:WireItemComp;
+			public var item2:WireItemComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createItem();
+			}
+			
+			private function createItem():void
+			{
+				qg.removeAllElements();
+				
+				item1 = new WireItemComp();
+				qg.addElement(item1);
+				item1.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+				item1.rightSurface = surface1;
+				
+				item2 = new WireItemComp();
+				qg.addElement(item2);
+				item2.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " 2 resize");
+				});
+				item2.x = 300;
+				item2.leftSurface = surface1;
+				
+			}
+			
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("------ " + btn1.label + "------");
+				item1.rightConnectedItem = item2;
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("------ size ------");
+				
+				trace(item1.name + ": " + item1.rightConnectedItem);
+				trace(item2.name + ": " + item2.leftConnectedItem);
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="100" y="100"
+			 width="800" height="800">
+	</s:Group>
+	<s:Button x="10" y="10" label="random"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button id="btn3" x="10" y="112" label="answer" click="btn3_clickHandler(event)"/>
+	
+	<controls:WireSurface id="surface1"
+						  />
+	
+</s:Application>

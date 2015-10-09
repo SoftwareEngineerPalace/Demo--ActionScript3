@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="init(event)" title="Test Ane Test Demo">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.A17zuoye.mobile.testANE333.TestANELib3;
+			
+			import mx.events.FlexEvent;
+			
+			
+			public var ext:TestANELib3;
+			
+			protected function init(event:FlexEvent):void
+			{
+			}
+			
+			private function log(msg:String):void
+			{
+				txtArea.appendText("\n" + msg);
+			}
+			
+			
+			protected function initLib():void
+			{
+				try {
+					ext = new TestANELib3();
+					ext.init();
+				}
+				catch (err:Error)
+				{
+					log(String(err));
+				}
+			}
+			
+			protected function btnInit_clickHandler(event:MouseEvent):void
+			{
+				trace("init lib");
+				initLib();
+			}
+			
+			protected function btnSet_clickHandler(event:MouseEvent):void
+			{
+				if (!ext) return;
+				
+				var v:Number = parseFloat(input.text);
+				if (v >= 0 && v <= 1)
+				{
+					trace("set volume: " + v);
+					ext.setVolume(v);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout
+			
+			/>
+	</s:layout>
+	<s:Button
+		id="btnInit"
+		label="init"
+		click="btnInit_clickHandler(event)"
+		/>
+	<s:TextInput
+		id="input"
+		/>
+	<s:Button
+		id="btnSet"
+		label="Set Volume"
+		click="btnSet_clickHandler(event)"
+		/>
+	<s:TextArea
+		id="txtArea"
+		width="800"
+		height="1000"
+		/>
+	
+</s:View>

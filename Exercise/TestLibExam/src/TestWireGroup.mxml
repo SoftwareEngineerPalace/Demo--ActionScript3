@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="900" width="900"
+			   creationComplete="creationCompleteHandler(event)" xmlns:controls="com.flextoolbox.controls.*"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.WireItemComp;
+			import com.voxlearning.exam.component.group.WireGroupComp;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			
+			
+			public var comp:WireGroupComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createItem();
+			}
+			
+			private function createItem():void
+			{
+				qg.removeAllElements();
+				
+				comp = new WireGroupComp();
+				comp.numColumns = 2;
+				comp.numRows = 4;
+				qg.addElement(comp);
+				comp.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+			}
+			
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("------ " + btn1.label + "------");
+				
+				comp.numColumns++;
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("------ size ------");
+				
+				trace(JSON.stringify(comp.fullData, null, 4));
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="100" y="100"
+			 width="800" height="800">
+	</s:Group>
+	<s:Button x="10" y="10" label="random"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button id="btn3" x="10" y="112" label="answer" click="btn3_clickHandler(event)"/>
+	
+	<controls:WireSurface id="surface1"
+						  />
+	
+</s:Application>

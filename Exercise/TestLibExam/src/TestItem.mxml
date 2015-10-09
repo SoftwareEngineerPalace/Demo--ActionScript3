@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="1000" width="800"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.ItemComp;
+			import com.voxlearning.exam.model.vo.ItemCompData;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			public var comp:ItemComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				comp = new ItemComp();
+				comp.content = "asdasd";
+				qg.addElement(comp);
+				comp.y = 300;
+				comp.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+			}
+			
+			
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("------ img ------");
+				
+				comp.type = "image";
+				comp.content = "http://192.168.100.2/examgfs/53abf136e4b02e5d44e07444";
+			}
+			
+			protected function btn2_clickHandler(event:MouseEvent):void
+			{
+				trace("------ formula ------");
+				
+				comp.type = "formula";
+				comp.content = "\\frac{2}{3}";
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("------ image ------");
+				
+				comp.type = "text";
+				comp.content = "isadfasdasdg";
+			}
+			
+			protected function btn4_clickHandler(event:MouseEvent):void
+			{
+				trace("------ item data ------");
+				trace(JSON.stringify(comp.fullData, null, 4));
+				
+				trace("------ item size ------");
+				
+				trace("  : " + comp.width + ", " + comp.height)
+				trace("c : " + comp.contentWidth + ", " + comp.contentHeight);
+				trace("m : " + comp.measuredWidth + ", " + comp.measuredHeight);
+				trace("ex: " + comp.explicitWidth + ", " + comp.explicitHeight);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="110" y="10"
+			 width="580" height="406">
+	</s:Group>
+	<s:Button x="10" y="10" label="image"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="44" label="formula"
+			  id="btn2"
+			  click="btn2_clickHandler(event)"/>
+	<s:Button x="10" y="80" label="text"
+			  id="btn3"
+			  click="btn3_clickHandler(event)"/>
+	<s:Button x="10" y="125" label="itemSize"
+			  id="btn4"
+			  click="btn4_clickHandler(event)"/>
+	
+	
+</s:Application>

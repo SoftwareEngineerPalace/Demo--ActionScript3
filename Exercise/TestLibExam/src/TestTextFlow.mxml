@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="1500" width="1500"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.ImageComp;
+			import com.voxlearning.exam.component.base.TextInputComp;
+			import com.voxlearning.exam.component.group.TextFlowComp;
+			import com.voxlearning.exam.component.skins.TextFlowCompSkin;
+			import com.voxlearning.exam.model.vo.TextFlowCompData;
+			
+			import flashx.textLayout.elements.InlineGraphicElement;
+			import flashx.textLayout.formats.ClearFloats;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.components.TextArea;
+			
+			public var comp:TextFlowComp;
+			public var comp2:TextArea;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				this.focusRect = true;
+				
+				comp = new TextFlowComp();
+				comp.inputable = true;
+				comp.editable = true;
+				qg.addElement(comp);
+				
+				comp2 = new TextArea();
+				qg.addElement(comp2);
+				comp2.y = 400;
+				//comp2.width = 680;
+				comp2.maxWidth = 680;
+				comp2.widthInChars = 50;
+				comp2.setStyle("skinClass", TextFlowCompSkin);
+			}
+			
+			/** new item */
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				var item:TextInputComp = new TextInputComp();
+				item.editable = true;
+				comp.addComp(item, true);
+				
+				var ige2:InlineGraphicElement = new InlineGraphicElement();
+				ige2.source = "http://192.168.100.2/examgfs/53b4f732e4b023198b32c4ef";
+				ige2.width = 500;
+				ige2.height = 200;
+				ige2.float = "none";
+				ige2.clearFloats = ClearFloats.NONE;
+				comp2.textFlow.getLastLeaf().getParagraph().addChild(ige2);
+			}
+			
+			
+			protected function btn2_clickHandler(event:MouseEvent):void
+			{
+				var item:ImageComp = new ImageComp();
+				item.source = "http://192.168.100.2/examgfs/53b4f732e4b023198b32c4ef";
+				comp.addComp(item, true, "left");
+				
+				var ige2:InlineGraphicElement = new InlineGraphicElement();
+				ige2.source = "http://192.168.100.2/examgfs/53b4f732e4b023198b32c4ef";
+				ige2.float = "left";
+				ige2.clearFloats = "left";
+				comp2.textFlow.getLastLeaf().getParagraph().addChild(ige2);
+			}
+			
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				//trace(TextFlowUtil.export(comp.textArea.textFlow));
+				trace(comp.text);
+				comp.dumpImgs();
+				comp.dumpItems();
+				
+				//trace(JSON.stringify(comp.data,null,4));
+			}
+			
+			protected function btn4_clickHandler(event:MouseEvent):void
+			{
+				var data:TextFlowCompData = new TextFlowCompData();
+				data.textFlow = '<TextFlow version="1" xmlns="http://www.17zuoye.com/exam"><p><span>123123</span><textInput answer="44444444444444444444"/><textInput answer="21"/><span>12124124</span><img source="http://192.168.100.2/examgfs/53b4f732e4b023198b32c4ef" width="194" height="118" float="left"/><span>124</span></p></TextFlow>';
+				data.texts = ["2","3333333333333333333333333333"];
+				comp.fullData = data;
+			}
+			
+			protected function btn5_clickHandler(event:MouseEvent):void
+			{
+				comp.applyFormat();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="100" y="100"
+			 width="800">
+		
+	</s:Group>
+	
+	<s:Button id="btn1"
+			  x="10" y="10" label="add input"
+			  click="btn1_clickHandler(event)"
+			  />
+	<s:Button id="btn2"
+			  x="10" y="35" label="add image"
+			  click="btn2_clickHandler(event)"
+			  />
+	<s:Button id="btn3"
+			  x="10" y="112" label="dump"
+			  click="btn3_clickHandler(event)"
+			  />
+	<s:Button id="btn4"
+			  x="10" y="60" label="set full data"
+			  click="btn4_clickHandler(event)"
+			  />
+	<s:Button id="btn5"
+			  x="10" y="85" label="underline"
+			  click="btn5_clickHandler(event)"
+			  />
+	
+	
+</s:Application>

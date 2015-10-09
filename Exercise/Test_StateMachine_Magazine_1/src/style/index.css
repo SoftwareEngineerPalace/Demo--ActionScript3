@@ -1,0 +1,22 @@
+@charset "gb2312";
+/* CSS Document */
+/****************************************全局标签样式控制开始***************************************/
+body,html{
+	text-align:center;
+	height:100%;
+	font-size:12px;
+	line-height:28px;
+	border:0;
+	margin:0;
+	padding:0;
+}
+div,p,ol,ul,li,span,img,input,form,textarea,h1,h2,h3,h4,h5,h6,h7,a,table,td,tr,select,br{
+	margin:0;
+	padding:0;
+	border:0;
+}
+.main_swf{
+	width:100%;
+	height:100%;
+	background:#330;
+}

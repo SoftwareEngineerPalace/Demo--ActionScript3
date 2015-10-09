@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="900" width="900"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.VoxImage;
+			
+			import lib.dump;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			public var it:VoxImage;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createItem();
+			}
+			
+			private function createItem():void
+			{
+				qg.removeAllElements();
+				
+				it = new VoxImage();
+				qg.addElement(it);
+				it.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+			}
+			
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("------ " + btn1.label + "------");
+				
+				var urls:Array = [
+					"http://h.hiphotos.baidu.com/news/pic/item/29381f30e924b899f5aef2bf6c061d950b7bf6a3.jpg",
+					"C:/Users/jishu/Documents/无标题.jpg"
+				];
+				var n:int = Math.random() * urls.length;
+				var s:String = urls[n];
+				
+				trace(s);
+				
+				it.source = s;
+			}
+			
+			protected function btn1a_clickHandler(event:MouseEvent):void
+			{
+				trace("------ " + btn1a.label + "------");
+				
+				var s:String = "$\\frac{2}{3}\\frac{2}{3}\\frac{2}{3}\\frac{2}{3}\\frac{2}{3}\\frac{3}{\\frac{2}{3}}\\frac{3}{\\frac{2}{\\frac{2}{\\frac{2}{3\\frac{2}{\\frac{2}{3}}}}}}$";
+				it.latex = s;
+			}
+			
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("------ size ------");
+				
+				dump(it);
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="100" y="100"
+			 width="800" height="800">
+	</s:Group>
+	<s:Button x="10" y="10" label="image"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="35" label="formula"
+			  id="btn1a"
+			  click="btn1a_clickHandler(event)"/>
+	<s:Button id="btn3" x="10" y="112" label="size" click="btn3_clickHandler(event)"/>
+	
+	
+</s:Application>

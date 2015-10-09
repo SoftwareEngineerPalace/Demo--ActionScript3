@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+				xmlns:view="org.robotlegs.demos.helloflex.view.*"
+				xmlns:helloflex="org.robotlegs.demos.helloflex.*"
+				layout="absolute"
+				paddingBottom="0"
+				paddingLeft="0"
+				paddingRight="0"
+				paddingTop="0"
+				viewSourceURL="srcview/index.html">
+
+
+	<helloflex:HelloFlexContext contextView="{this}" />
+
+	<mx:HDividedBox width="450"
+					height="450"
+					verticalCenter="0"
+					horizontalCenter="0">
+
+		<mx:TabNavigator width="100%"
+						 height="100%">
+			<view:InfoCanvas label="RobotLegs"/>
+			<view:DemoCanvas label="Mini Demo"/>
+		</mx:TabNavigator>
+
+		<mx:VDividedBox width="160"
+						height="100%">
+			<view:MessageList/>
+			<view:SimpleLogBox/>
+		</mx:VDividedBox>
+
+	</mx:HDividedBox>
+
+</mx:Application>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="900" width="900"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.TextInputComp;
+			import com.voxlearning.exam.component.skins.VoxTextInputSkin;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			
+			public var comp:TextInputComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createItem();
+			}
+			
+			private function createItem():void
+			{
+				qg.removeAllElements();
+				
+				comp = new TextInputComp();
+				comp.inputable = true;
+				comp.textMinWidth = 28;
+				comp.typicalText = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+				qg.addElement(comp);
+				comp.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+			}
+			
+			private function setRandom():void
+			{
+				trace("------ random ------");
+				
+				var len:int = int(Math.random()*(Math.random()<0.5?10:100));
+				var a:Array = [];
+				for(var i:int=0; i<len; i++)
+				{
+					a[i] = int(Math.random()*26+65);
+				}
+				var s:String = String.fromCharCode.apply(null, a);
+				
+				s = "<" + s + ">";
+				trace(s);
+				
+				comp.text = s;
+			}
+			
+			
+			private function setTypical():void
+			{
+				trace("------ typical ------");
+				
+				var len:int = int(Math.random()*(Math.random()<0.5?10:100));
+				var a:Array = [];
+				for(var i:int=0; i<len; i++)
+				{
+					a[i] = int(Math.random()*26+65);
+				}
+				var s:String = String.fromCharCode.apply(null, a);
+				
+				s = "<" + s + ">";
+				trace(s);
+				
+				comp.typicalText = s;
+			}
+			
+			
+			protected function changeEditable():void
+			{
+				comp.editable = btn3.selected;
+			}
+			
+			protected function dump():void
+			{
+				
+				trace(JSON.stringify(comp.fullData, null, 4));
+			
+				trace("------ size ------");
+					
+				dump2(comp.input);
+				
+				trace("-- skin --");
+				dump2(comp.input.skin);
+				
+				trace("-- RichEditableText --");
+				dump2((comp.input.skin as VoxTextInputSkin).textDisplay);
+			}
+			
+			private function dump2(obj:*):void
+			{
+				if ("width" in obj)
+					trace("  : " + obj.width + ", " + obj.height)
+				if ("contentWidth" in obj)
+					trace("c : " + obj.contentWidth + ", " + obj.contentHeight);
+				if ("measuredWidth" in obj)
+					trace("m : " + obj.measuredWidth + ", " + obj.measuredHeight);
+				if ("explicitWidth" in obj)
+					trace("ex: " + obj.explicitWidth + ", " + obj.explicitHeight);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="100" y="100"
+			 width="800" height="800">
+	</s:Group>
+	<s:Button x="10" y="10" label="random"
+			  id="btn1"
+			  click="setRandom()"/>
+	<s:Button x="10" y="35" label="typical"
+			  id="btn2"
+			  click="setTypical()"/>
+	<s:ToggleButton x="10" y="61" label="editable"
+			  id="btn3"
+			  click="changeEditable()"/>
+	<s:Button id="btn4" x="10" y="112" label="dump" click="dump()"/>
+	
+	
+</s:Application>

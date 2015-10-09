@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" ?>
+<project name ="buildProject" default="compile" basedir=".">
+	
+	<!-- Set TARGET_NAME -->
+	<property name="TARGET_NAME" value="TestDebug" />
+	<!-- Set SRC_DIR -->
+	<property name="SRC_DIR" value="${basedir}/src/TestDebug.as" />
+	
+	
+	<!-- NO NEED TO EDIT BELOW -->
+	
+	
+	<!-- Set PROJECT_HOME -->
+	<property name="PROJECT_HOME" value="D:/project" />
+	<!-- Set DEST_DIR -->
+	<property name="DEST_DIR_ROOT" value="D:/publish/test/apps/flash" />
+	<!-- Set DEST_DIR -->
+	<property name="DEST_DIR" value="${DEST_DIR_ROOT}/libs/" />
+	
+	<!-- Define flexTask.jar dir -->
+	<taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/> 
+	
+	<!-- Targets -->
+    <target name="delete">
+        <delete file="${DEST_DIR}/${TARGET_NAME}.swf"/>
+    </target>
+	
+    <target name="compile" depends ="delete">
+        <mxmlc file="${SRC_DIR}"
+			output="C:/Users/jishu/Desktop/新建文件夹/t+debug+omit-track.swf"
+			>
+			<load-config filename="flex-config.xml"/>
+			
+			<library-path file="D:/project/Library/Lib_GhostCat/bin/Lib_GhostCat.swc" append="true" />
+
+			<compiler.debug>true</compiler.debug>
+
+		</mxmlc>
+    </target>
+</project>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="1000" width="800"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.group.ClassifBoxComp;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			
+			public var comp1:ClassifBoxComp;
+			public var comp2:ClassifBoxComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createComp();
+			}
+			
+			private function createComp():void
+			{
+				if (comp1) comp1.dispose();
+				if (comp2) comp2.dispose();
+				qg.removeAllElements();
+				
+				comp1 = new ClassifBoxComp();
+				qg.addElement(comp1);
+				comp1.dragGroup = 1;
+				comp1.isOptions = false;
+				comp1.addEventListener(ResizeEvent.RESIZE, compResizeHandler, false, 0, true);
+				
+				comp2 = new ClassifBoxComp();
+				qg.addElement(comp2);
+				comp2.dragGroup = 1;
+				comp2.isOptions = false;
+				comp2.x = 300;
+				comp2.addEventListener(ResizeEvent.RESIZE, compResizeHandler, false, 0, true);
+			}
+			
+			
+			private function compResizeHandler(event:Event):void
+			{
+				//trace(new Date().time + " resize " + event.currentTarget.name);
+			}
+			
+			
+			private function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("--- add item");
+				comp1.numItems++;
+				comp2.numItems++;
+			}
+			
+			protected function btn2_clickHandler(event:MouseEvent):void
+			{
+				trace("--- delete item");
+				comp1.numItems--;
+				comp2.numItems--;
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("--- editable " + btn3.selected);
+				comp1.editable = btn3.selected;
+				comp2.editable = btn3.selected;
+			}
+			
+			protected function btn4_clickHandler(event:MouseEvent):void
+			{
+				trace("--- inputable " + btn4.selected);
+				comp1.inputable = btn4.selected;
+				comp2.inputable = btn4.selected;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="110" y="10"
+			 width="580" height="406">
+	</s:Group>
+	<s:Button x="10" y="10" label="添加选项"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="44" label="删除选项"
+			  id="btn2"
+			  click="btn2_clickHandler(event)"/>
+	<s:ToggleButton x="10" y="80" label="可编辑"
+			  id="btn3"
+			  click="btn3_clickHandler(event)"/>
+	<s:ToggleButton x="10" y="125" label="可输入"
+			  id="btn4"
+			  click="btn4_clickHandler(event)"/>
+	
+	
+</s:Application>

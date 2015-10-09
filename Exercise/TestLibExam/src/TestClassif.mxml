@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="1000" width="800"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.group.ClassifBoxComp;
+			import com.voxlearning.exam.component.group.ClassifGroupComp;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			
+			public var comp:ClassifGroupComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createComp();
+			}
+			
+			private function createComp():void
+			{
+				if (comp) comp.dispose();
+				qg.removeAllElements();
+				
+				comp = new ClassifGroupComp();
+				qg.addElement(comp);
+				comp.dragGroup = 1;
+				comp.addEventListener(ResizeEvent.RESIZE, compResizeHandler, false, 0, true);
+			}
+			
+			
+			private function compResizeHandler(event:Event):void
+			{
+				//trace(new Date().time + " resize " + event.currentTarget.name);
+			}
+			
+			
+			private function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("--- add item");
+				comp.numItems++;
+			}
+			
+			protected function btn2_clickHandler(event:MouseEvent):void
+			{
+				trace("--- delete item");
+				for each (var box:ClassifBoxComp in comp.getItems())
+				{
+					box.numItems++;
+				}
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("--- editable " + btn3.selected);
+				comp.editable = btn3.selected;
+			}
+			
+			protected function btn4_clickHandler(event:MouseEvent):void
+			{
+				trace("--- inputable " + btn4.selected);
+				comp.inputable = btn4.selected;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="110" y="10"
+			 width="580" height="406">
+	</s:Group>
+	<s:Button x="10" y="10" label="add column"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="44" label="add row"
+			  id="btn2"
+			  click="btn2_clickHandler(event)"/>
+	<s:ToggleButton x="10" y="80" label="可编辑"
+			  id="btn3"
+			  click="btn3_clickHandler(event)"/>
+	<s:ToggleButton x="10" y="125" label="可输入"
+			  id="btn4"
+			  click="btn4_clickHandler(event)"/>
+	
+	
+</s:Application>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   height="900" width="900"
+			   creationComplete="creationCompleteHandler(event)"
+			   >
+	<fx:Script>
+		<![CDATA[
+			import com.voxlearning.exam.component.base.FractionComp;
+			import com.voxlearning.exam.component.base.TextInputComp;
+			import com.voxlearning.exam.component.skins.VoxTextInputSkin;
+			import com.voxlearning.exam.pub.ExamConfig;
+			import com.voxlearning.exam.pub.consts.ExamMode;
+			
+			import lib.dump;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			public var it:FractionComp;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				Console.init(this);
+				
+				createItem();
+			}
+			
+			private function createItem():void
+			{
+				qg.removeAllElements();
+				
+				it = new FractionComp();
+				it.inputable = btn2.selected;
+				qg.addElement(it);
+				it.addEventListener(ResizeEvent.RESIZE, function(e:*):void
+				{
+					trace(new Date().time + " resize");
+				});
+			}
+			
+			protected function btn1_clickHandler(event:MouseEvent):void
+			{
+				trace("------ auto ------");
+				
+				var n:int = int(Math.random()*(Math.random()<0.5?10:30));
+				var a:Array = [];
+				for(var i:int=0; i<n; i++)
+				{
+					a[i] = int(Math.random()*26+65);
+				}
+				var s:String = String.fromCharCode.apply(null, a);
+				
+				s = "<" + s + ">";				
+				s = s+","+s+"/"+s
+				trace(s);
+				
+				it.keyAnswer = s;
+				it.answer = s;
+			}
+			
+			protected function btn1a_clickHandler(event:MouseEvent):void
+			{
+				trace("------ fixed ------");
+				
+				//var n:int = int(Math.random()*600);
+				//it.width = n;
+				//it.text = String(n);
+			}
+			
+			protected function btn2_clickHandler(event:MouseEvent):void
+			{
+				ExamConfig.Mode = btn2.selected ? ExamMode.ANSWER : ExamMode.EDIT;
+				
+				createItem();
+			}
+			
+			protected function btn3_clickHandler(event:MouseEvent):void
+			{
+				trace("------ size ------");
+				
+				dump(it);
+			}
+			
+			protected function btn4_clickHandler(event:MouseEvent):void
+			{
+				trace("------ input size ------");
+				
+				dump(it);
+				
+				trace("-- skin --");
+				dump(it.inputWhole);
+				
+				trace("-- RichEditableText --");
+				dump(it.inputNume);
+				trace("-- RichEditableText --");
+				dump(it.inputDeno);
+			}
+						
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="100" y="100"
+			 width="800" height="800">
+	</s:Group>
+	<s:Button x="10" y="10" label="auto"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="35" label="fixed"
+			  id="btn1a"
+			  click="btn1a_clickHandler(event)"/>
+	<s:ToggleButton x="10" y="61" label="editable"
+			  id="btn2"
+			  click="btn2_clickHandler(event)"/>
+	<s:Button id="btn3" x="10" y="112" label="size" click="btn3_clickHandler(event)"/>
+	<s:Button x="10" y="142" label="input size"
+			  id="btn4"
+			  click="btn4_clickHandler(event)"/>
+	
+	
+</s:Application>

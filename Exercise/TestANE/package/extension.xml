@@ -1,0 +1,15 @@
+<extension xmlns="http://ns.adobe.com/air/extension/15.0">
+	<id>com.A17zuoye.mobile.jpushane</id>
+	<versionNumber>0.0.1</versionNumber>
+	<platforms>
+		<platform name="Android-ARM">
+			<applicationDeployment>
+				<nativeLibrary>nativelib.jar</nativeLibrary>
+				<initializer>com.A17zuoye.mobile.NativeExtension</initializer>
+			</applicationDeployment>
+		</platform>
+		<platform name="default">
+			<applicationDeployment/>
+		</platform>
+	</platforms>
+</extension>

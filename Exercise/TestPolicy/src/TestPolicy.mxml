@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   creationComplete="creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.elements.TextFlow;
+			
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			
+			import spark.components.Image;
+			import spark.components.RichEditableText;
+			import spark.utils.TextFlowUtil;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				btn4.label = Security.sandboxType;
+				Security.allowDomain("*");
+				
+				Console.init(this);
+			}
+			
+			private function btn1_clickHandler(event:Event):void
+			{
+				trace("------ " + btn1.label + "------");
+				
+				qg.removeAllElements();
+				
+				var image:Image = new Image();
+				qg.addElement(image);
+				image.source = "http://cdn.17zuoye.com/examgfs/52be8a00a3109c6cdc0c9056?v="+Math.random();
+			}
+			
+			private function btn2_clickHandler(event:Event):void
+			{
+				trace("------ " + btn2.label + "------");
+				
+				qg.removeAllElements();
+				var txt:RichEditableText = new RichEditableText();
+				qg.addElement(txt);
+				
+				var xml:XML = 
+				<TextFlow whiteSpaceCollapse="preserve" version="2.0.0" xmlns="http://ns.adobe.com/textLayout/2008">
+	  				<p>
+						<img source="http://cdn.17zuoye.com/examgfs/52be8a00a3109c6cdc0c9056?v=0.18289255117997527"/>
+	  				</p>
+				</TextFlow>
+				;
+				var tf:TextFlow = TextFlowUtil.importFromXML(xml);
+				txt.textFlow = tf;
+			}
+			
+			private function btn5_clickHandler(event:Event):void
+			{
+				var loader:Loader = new Loader();
+				var req:URLRequest = new URLRequest("http://cdn.17zuoye.com/examgfs/52be8a00a3109c6cdc0c9056");
+				//var context:LoaderContext = new LoaderContext();
+				//context.checkPolicyFile = false;
+				loader.load(req);
+				var ui:UIComponent = new UIComponent();
+				ui.addChild(loader);
+				qg.addElement(ui);
+			}
+			
+			
+			private function btn3_clickHandler(event:Event):void
+			{
+				trace("------ " + btn3.label + "------");
+				
+				var bdn:BitmapData = new BitmapData(600, 400);
+				bdn.draw(qg);
+			}
+			
+			private function btn4_clickHandler(event:Event):void
+			{
+				trace("------ " + btn4.label + "------");
+				
+				Security.loadPolicyFile("http://cdn.17zuoye.com/crossdomain.xml");
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Group id="qg"
+			 x="110" y="10"
+			 width="580" height="406">
+	</s:Group>
+	<s:Button x="10" y="10" label="image"
+			  id="btn1"
+			  click="btn1_clickHandler(event)"/>
+	<s:Button x="10" y="43" label="inline"
+			  id="btn2"
+			  click="btn2_clickHandler(event)"/>
+	<s:Button x="10" y="121" label="draw"
+			  id="btn3"
+			  click="btn3_clickHandler(event)"/>
+	<s:Button x="10" y="150" label="policy"
+			  id="btn4"
+			  click="btn4_clickHandler(event)"/>
+	<s:Button x="10" y="76" label="loader"
+			  id="btn5"
+			  click="btn5_clickHandler(event)"/>
+</s:Application>

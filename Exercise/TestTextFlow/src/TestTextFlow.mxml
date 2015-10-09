@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600"
+			   creationComplete="init(event)">
+	<fx:Declarations>
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.*;
+			import flashx.textLayout.elements.*;
+			
+			import mx.controls.TextInput;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			private var textFlow:TextFlow;
+			private  var pe:ParagraphElement
+			
+			private var img:InlineGraphicElement;
+			
+			protected function init(event:FlexEvent):void{
+				textFlow = new TextFlow();
+				pe = new ParagraphElement();
+				textFlow.addChild(pe);
+			}
+			
+			private function addImage():void {
+				var img:InlineGraphicElement = new InlineGraphicElement();
+				img.source = "http://www.test.17zuoye.net/examgfs/exam-preview-MATH-531ed4ed5f68fed7c7d053be";
+				pe.addChild(img);
+			}
+			
+			private function addText():void{
+				var span:SpanElement = new SpanElement();
+				span.text = "潍坊哇娃儿放入撒旦法师爱上撒司法aaf";
+				pe.addChild(span);
+			}
+			
+			private function addTextInput():void{
+				var img:InlineGraphicElement = new InlineGraphicElement();
+				img.source = createTextInput();
+				pe.addChild(img);
+			}
+			
+			private function createTextInput():TextInput{
+				var textInput:TextInput = new TextInput();
+				textInput.width = 100;
+				textInput.height = 20;
+				textInput.text = "aaa";
+				return textInput;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:layout> 
+		<s:VerticalLayout/> 
+	</s:layout>
+	
+	<s:Group width="100%" height="100%"
+			 horizontalCenter="0" verticalCenter="0">
+		<s:RichEditableText id="richTxt" textAlign="justify" width="100%"
+							textFlow="{textFlow}" />
+	</s:Group>
+	<s:Button label="AddImage" click="addImage()"/>
+	<s:Button label="AddText" click="addText()"/>
+	<s:Button label="AddTextInput" click="addTextInput()"/>
+</s:Application>
