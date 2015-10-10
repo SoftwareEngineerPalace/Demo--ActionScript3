@@ -10,7 +10,7 @@ package
 	{
 		public function SortAlgorithm()
 		{
-			test_directInsertSort( raw ) ;
+			test02_directInsertSort( raw ) ;
 			trace( raw.toString() ) ;
 		}
 		
@@ -37,7 +37,7 @@ package
 		}
 		
 		/**
-		 * 直接插入排序  练习成功 肖建军@2015-10-09
+		 * 直接插入排序  练习01成功  肖建军@2015-10-09
 		 * @param $arr
 		 */
 		private function test_directInsertSort( $arr:Array ):void
@@ -54,6 +54,28 @@ package
 						k -- ;
 					}
 					$arr[ k + 1 ] = tmp ;
+				}
+			}
+		}
+		
+		/**
+		 * 直接插入排序 练习02成功 肖建军@2015-10-10
+		 * @param $arr
+		 */
+		private function test02_directInsertSort( $arr:Array ):void
+		{
+			for (var i:int = 1, len:uint = $arr.length ; i < len ; i++ ) 
+			{
+				if( $arr[ i ] < $arr[ i - 1 ] )
+				{
+					var bak:int = $arr[ i ] ;
+					var k:uint = i - 1 ;
+					for (var j:int = k; j>=0 && $arr[j] > bak ; j--) 
+					{
+						$arr[ j + 1 ] = $arr[ j ] ;
+						k -- 
+					}
+					$arr[ k + 1 ] = bak ;
 				}
 			}
 		}
