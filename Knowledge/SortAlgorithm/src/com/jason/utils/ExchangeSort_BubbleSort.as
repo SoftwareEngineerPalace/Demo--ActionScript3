@@ -8,7 +8,7 @@ package com.jason.utils
 		
 		public static function excute( arr:Array ):void
 		{
-			test( arr ) ;
+			test02( arr ) ;
 		}
 		
 		private static function standard( arr:Array ):void
@@ -31,6 +31,26 @@ package com.jason.utils
 		private static function test( $arr:Array ):void
 		{
 			for (var i:int = 0, len:uint = $arr.length ; i < len ; i++ ) 
+			{
+				for (var j:int = i + 1; j < len; j++) 
+				{
+					if( $arr[ j ] < $arr[ i ] )
+					{
+						var tmp:* = $arr[ i ] ;
+						$arr[ i ] = $arr[ j ] ;
+						$arr[ j ] = tmp ;
+					}
+				}
+			}
+		}
+		
+		/**
+		 * 肖建军  练习成功 @2015-10-13 
+		 * @param $arr
+		 */
+		private static function test02( $arr:Array ):void
+		{
+			for (var i:int = 0, len:uint = $arr.length; i < len; i++) 
 			{
 				for (var j:int = i + 1; j < len; j++) 
 				{

@@ -12,7 +12,7 @@ package com.jason.utils
 		
 		public static function excute( $arr:Array ):void
 		{
-			copy_straightInsertionSort( $arr ) ;
+			test05( $arr ) ;
 		}
 		
 		/**
@@ -36,8 +36,26 @@ package com.jason.utils
 			} 
 		}
 		
+		private static function test03_straightInsertionSort( $arr:Array ):void
+		{
+			for (var i:int = 1, len:uint = $arr.length ; i < len; i++ ) 
+			{
+				if( $arr[ i ] < $arr[ i - 1 ] )
+				{
+					var tmp:uint = $arr[ i ] ;
+					var k:uint = i - 1 ;
+					for (var j:int = k; j >= 0 && $arr[ j ] > tmp ; j--) 
+					{
+						$arr[ j + 1 ] = $arr[ j ] ;
+						k -- ;
+					}
+					$arr[ k + 1 ] = tmp ;
+				}
+			}
+		}
+		
 		/**
-		 * 插入排序-直接插入排序  练习01成功  肖建军@2015-10-09
+		 * 直接插入排序-直接插入排序  练习01成功  肖建军@2015-10-09
 		 * @param $arr
 		 */
 		private static function test_straightInsertionSort( $arr:Array ):void
@@ -59,7 +77,7 @@ package com.jason.utils
 		}
 		
 		/**
-		 * 插入排序-直接插入排序 练习02成功 肖建军@2015-10-10
+		 * 直接插入排序-直接插入排序 练习02成功 肖建军@2015-10-10
 		 * @param $arr
 		 */
 		private static function test02_straightInsertionSort( $arr:Array ):void
@@ -77,6 +95,23 @@ package com.jason.utils
 					}
 					$arr[ k + 1 ] = bak ;
 				}
+			}
+		}
+		
+		private static function test05( a:Array ):void
+		{
+			var i:uint, j:uint;
+			var temp:Number;
+			for (i = 1; i < a.length ; i++)
+			{
+				temp = a[i];
+				j = i - 1;
+				while (j >= 0 && temp < a[j])
+				{
+					a[j + 1] = a[j];
+					j--;
+				}
+				a[j + 1] = temp;
 			}
 		}
 	}
