@@ -1,11 +1,17 @@
 package
 {
+	import com.jason.testUnit.Test_WaveSound;
+	import com.vox.gospel.media.WaveSound;
+	
 	import flash.display.Sprite;
 	import flash.events.ActivityEvent;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
 	import flash.events.StatusEvent;
 	import flash.events.TextEvent;
 	import flash.media.Microphone;
 	import flash.text.TextField;
+	import flash.ui.Mouse;
 	
 	import ghostcat.ui.controls.GText;
 	
@@ -21,8 +27,34 @@ package
 			
 			//testHtmlText();
 			
-			testDate();
+			//testDate();
+			
+			testWaveSound();
 		}
+		
+		
+		private static var _waveSound:WaveSound;
+		private function testWaveSound():void
+		{
+			_waveSound = new WaveSound();      
+			_waveSound.addEventListener( WaveSound.EVENT_PLAY_OVER, function( $evt:Event ):void
+			{
+				$evt.currentTarget.removeEventListener( $evt.type, arguments.callee ) ;
+				if ( _waveSound == $evt.currentTarget ) 
+				{
+					_waveSound = null;
+				}
+			}
+			) ;
+			_waveSound.loadAndPlay("http://cdn-static-shared.test.17zuoye.net//fs-tts/546eb82cce23505c08000068");
+			this.stage.addEventListener( MouseEvent.CLICK, onStageClickHandler ) ;
+		}
+		
+		private function onStageClickHandler( $evt:MouseEvent ):void
+		{
+			_waveSound.stopSound() ;	
+		}
+		
 		
 		private function testDate():void
 		{

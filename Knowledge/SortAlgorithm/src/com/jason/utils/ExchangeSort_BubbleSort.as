@@ -8,7 +8,7 @@ package com.jason.utils
 		
 		public static function excute( arr:Array ):void
 		{
-			test02( arr ) ;
+			test05( arr ) ;
 		}
 		
 		private static function standard( arr:Array ):void
@@ -61,6 +61,26 @@ package com.jason.utils
 						$arr[ j ] = tmp ;
 					}
 				}
+			}
+		}
+		
+		/**
+		 * 肖建军 @2015-10-16 
+		 */
+		private static function test05( $value:Array ):void
+		{
+			for (var i:int = 0, len:uint = $value.length; i < len; i++) 
+			{
+				for (var j:int = i+1 ; j < len; j++) 
+				{
+					if( $value[ j ] <　$value[ i ] )
+					{
+						var tmp:* = $value[ j ] ;
+						$value[ j ] = $value[ i ] ;
+						$value[ i ] = tmp ;
+					}
+				}
+				
 			}
 		}
 	}
