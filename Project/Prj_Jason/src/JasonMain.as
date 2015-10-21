@@ -29,9 +29,16 @@ package
 			
 			//testDate();
 			
-			testWaveSound();
+			//testWaveSound();
+			
+			testSplice();
 		}
 		
+		private var firstKnowledgeRowArr:Array = [0,1,2,3,4,5]
+		private function testSplice():void
+		{
+			var result:Array = firstKnowledgeRowArr.splice( 3, 1 ) ;
+		}
 		
 		private static var _waveSound:WaveSound;
 		private function testWaveSound():void
