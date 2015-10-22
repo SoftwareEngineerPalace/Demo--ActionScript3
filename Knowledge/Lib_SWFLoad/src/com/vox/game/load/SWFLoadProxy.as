@@ -4,16 +4,21 @@ package com.vox.game.load
 	import com.vox.gospel.utils.LoadUtil;
 	import com.vox.gospel.utils.PathUtil;
 	import com.vox.gospel.utils.StringUtils;
+	import com.vox.gospel.utils.URLUtil;
 	import com.vox.gospel.utils.VersionUtil;
 	
+	import flash.display.Loader;
 	import flash.display.Stage;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
+	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
 	import flash.system.ApplicationDomain;
 	import flash.system.LoaderContext;
 	import flash.utils.Timer;
+	import flash.utils.clearTimeout;
+	import flash.utils.getTimer;
 	
 	import spark.primitives.Path;
 
@@ -24,21 +29,36 @@ package com.vox.game.load
 	public class SWFLoadProxy
 	{
 		//----------------------------------------attrs 0 const--------------------------------------------------//
-		
+		private const LogType_ExecTime          :String = "exectime";
+		private const LogType_Notify            :String = "notify";
+		private const LogOp_LoadComplete        :String = "LoadComplete" ;
 		//----------------------------------------attrs 1 ui-----------------------------------------------------//
 		
 		//----------------------------------------attrs 2 status-------------------------------------------------//
-		private var _loadType                   :String = "";
+		private var _loadType                   :String = "" ;
 		/**正在加载*/
-		private var _loading                    :Boolean = false;
+		private var _beLoading                  :Boolean = false ;
 		/**游戏应用是否加载完成*/
-		private var _gameInitOK                 :Boolean = false;
+		private var _gameInitOK                 :Boolean = false ;
+		
 		//----------------------------------------attrs 3 data---------------------------------------------------//
-		private var _parameters                 :Object;
-		private var _loaders                    :Array;
+		private var _parameters                 :Object ;
+		private var _loaders                    :Array ;
 		/**加载次数*/
-		private var _loadCount                  :int = 0;
-		private var _gameURL                    :String;
+		private var _loadCount                  :int = 0 ;
+		/**实际目标小游戏的路径*/
+		private var _gameURL                    :String ;
+		/**什么的总数 ?*/
+		private var _totalNum                   :int ;
+		private var _curLoadingUrl              :String ;
+		private var _curLoadItemIndex           :uint ;
+		private var _timeoutFlag                :int ;
+		/**开始加载的时间戳 肖建军@2015-10-22*/
+		private var _startLoadTime              :Number ;
+		/**缓存记数 */
+		private var _cacheCount                 :int = 0;
+		/**加载的 id 肖建军@2015-10-22*/
+		private var _loadProcessID              :Number ;
 		
 		//----------------------------------------attrs 4 model--------------------------------------------------//
 		private var _handler                    :ISWFLoadProxyHandler ;
@@ -46,6 +66,7 @@ package com.vox.game.load
 		private var _cacheTimer                 :Timer;
 		/**心跳Timer*/
 		private var _heartBeatTimer             :Timer;
+		/**加载上下文*/
 		private var _loaderContext              :LoaderContext;
 	
 		
@@ -90,8 +111,8 @@ package com.vox.game.load
 		public function startLoad( $gameUrl:String = null ):void
 		{
 			// 1 当前是否正在加载的flag
-			if( _loading ) return ;
-			_loading = true ;
+			if( _beLoading ) return ;
+			_beLoading = true ;
 			// 2 游戏是否已经初始化完毕
 			_gameInitOK = false ;
 			// 3 加载次数
@@ -125,7 +146,7 @@ package com.vox.game.load
 			}
 			else
 			{
-				loadLibByURLs();
+				//loadLibByURLs();
 			}
 		}
 		
@@ -134,7 +155,6 @@ package com.vox.game.load
 		/**使用config.ini文件加载库主方法*/
 		private function loadLibByFile():void
 		{
-			
 			//加载config.ini
 			loadConfigURLINI();
 		}
@@ -147,7 +167,7 @@ package com.vox.game.load
 		
 		private function onUrlLoaderLoadCompleteHandler( $data:Object ):void
 		{
-			_configStr = $data ;
+			//_configStr = $data ;
 			loadLib_mainProcess();
 		}
 		
@@ -178,19 +198,55 @@ package com.vox.game.load
 						engineName = "future/gameengines/" + StringUtils.trim( lineList[2] ) + ".swf" ;
 						_configSwfURLArr.push( engineName ) ;
 					}
+					//向服务器请求最新的文件路径
 					VersionUtil.toVersionUrls( _configSwfURLArr, getVertionUrlCbkHandler ) ;
 				}
 			}
 		}
 		
+		/**向服务器请求最新的文件路径的回调*/
 		private function getVertionUrlCbkHandler( $dict:Object ):void
 		{
 			loadLibByURLs( $dict( _configSwfURLArr[ 0 ] ), $dict( _configSwfURLArr[ 1 ] ), $dict( _configSwfURLArr[ 2 ] ) ) ;
 		}
 		
+		/**知道多个lib swf的url地址，然后依次加载*/
 		private function loadLibByURLs( $gameUrl:String, $logiceUrl:String, $engineUrl:String ):void
 		{
+			var loadArr:Array = [];
+			//获取Logic的地址及版本号
+			if( $logiceUrl != null )
+			{
+				CONFIG::RELEASE
+				{
+					if( _loadCount > 1 )
+					{
+						//如果不是第一次加载，则给logic swf加上版本号
+						$logiceUrl = URLUtil.addVersion( $logiceUrl, String( new Date().time ) ) ;
+					}
+				}
+				loadArr.push( $logiceUrl ) ;
+			}
 			
+			//获取Engine的地址及版本号
+			if( $engineUrl != null )
+			{
+				CONFIG::RELEASE
+				{
+					if( _loadCount > 1 )
+					{
+						$engineUrl = URLUtil.addVersion( $engineUrl, String( new Date().time ) ) ;
+					}
+				}
+				loadArr.push( $engineUrl ) ;
+			}
+			
+			//如果appId有值，且appId和flashId不等
+			if( _parameters.appId != null && _parameters.flashId != _parameters.appId )
+			{
+				_totalNum = 1 ;
+				startLoadMainGameSwf();
+			}
 		}
 		
 		private function onUrlLoaderLoadErrorHandler( $evt:Event ):void
@@ -205,6 +261,28 @@ package com.vox.game.load
 			}
 		}
 		
+		/**正式开始加载 game swf 肖建军@2015-10-22*/
+		private function startLoadMainGameSwf():void
+		{
+			_curLoadingUrl = getValidUrlInTurn([_gameURL, _parameters.flashUrl, _parameters.flashURL])
+			CONFIG::RELEASE
+			{
+				if( _loadCount > 1 )
+				{
+					_curLoadingUrl = URLUtil.addVersion( _curLoadingUrl, String( new Date().time ) ) ;
+				}
+			}
+			LoadUtil.loaderLoadWithoutSandbox( _curLoadingUrl,
+				onLoadTargetGameComplete, 
+				onUrlLoaderLoadErrorHandler,
+				onLoadProgress,
+				_loaderContext ) ;
+			
+			//启动缓存计时器
+			_cacheTimer.reset() ;
+			_cacheTimer.start() ;
+		}
+		
 		
 		//----------------------------------------funs 3 listener------------------------------------------------//
 		/**
@@ -216,14 +294,176 @@ package com.vox.game.load
 			
 		}
 		
+		private function onLoadTargetGameComplete( $loader:Loader ):void
+		{
+			_curLoadItemIndex ++ ;
+			//1 IE浏览器里中途断网可能也会走Complete事件，所以要确保加载完全成功才行.
+			if( $loader.contentLoaderInfo.bytesLoaded <　$loader.contentLoaderInfo.bytesTotal )
+			{
+				var evt:IOErrorEvent = new IOErrorEvent( IOErrorEvent.NETWORK_ERROR, false, false, "可能是IE Bug, 中途断网后仍然走了Complete事件" );
+				onLoadIOError( evt ) ;
+				return ;
+			}
+			
+			//2 清除timeoutFlag
+			if( _timeoutFlag > 0 )
+			{
+				clearTimeout( _timeoutFlag ) ;
+				_timeoutFlag = 0 ;
+			}
+			
+			//3 设置加载状态为false
+			_beLoading = false ;
+			
+			//4 重置 缓存Timer
+			_cacheTimer.reset() ;
+			
+			//5 停止心跳
+			runHeartBeatTimer( false ) ;
+			
+			//6 打印log
+			startPingback( LogType_Notify, //log type
+				_loadType, //module 
+				LogOp_LoadComplete, //op
+				null,
+				{ i0:getTimer() - _startLoadTime,
+				i1: _cacheCount,
+				s1: _parameters.studyType,
+				loadProcessID: _loadProcessID });
+			
+			//7 补充一些操作
+			if( $loader.content )
+			{
+				$loader.content.addEventListener( "IntializeComplete", onGameIntializeSuccessfulCbk ) ;
+				$loader.content.addEventListener( "AftGameResultDis", onGameResultHandler ) ;
+				$loader.content.addEventListener( Event.REMOVED_FROM_STAGE, onContentOffStagedHandler ) ;
+				$loader.content.addEventListener( "VoxLoggerTracer", onVoxLoggerTracer ) ;
+			}
+		}
+		
+		private function runHeartBeatTimer( $value:Boolean ):void
+		{
+			if( !$value )
+			{
+				_heartBeatTimer.removeEventListener( TimerEvent.TIMER, onBeatHeartHandler ) 
+				_heartBeatTimer.reset() ;
+			}
+		}
+		
+		private function onLoadProgress(event:ProgressEvent):void
+		{
+			
+		}
+		
+		/**游戏初始化成功*/
+		private function onGameIntializeSuccessfulCbk( $evt:Event ):void
+		{
+			
+		}
+		
+		/**阿分提游戏，获取到了游戏结果时. */
+		private function onGameResultHandler( $evt:Event ):void
+		{
+			
+		}
+		
+		/**输入输出错误的回调*/
+		private function onLoadIOError( $evt:IOErrorEvent ):void
+		{
+			
+		}
+		
+		/**当content从Staging移出时*/
+		private function onContentOffStagedHandler( $evt:Event ):void
+		{
+			
+		}
+		
+		private function onVoxLoggerTracer():void
+		{
+			
+		}
+		
+		/**
+		 * 心跳TimerHandler
+		 * @param $evt
+		 */
+		private function onBeatHeartHandler( $evt:TimerEvent ):void
+		{
+			
+		}
+		
 		
 		//----------------------------------------funs 4 tool ---------------------------------------------------//
+		/**按顺序获取数组中的有效字符串 肖建军@2015-10-22*/
+		private function getValidUrlInTurn( $arr:Array ):String
+		{
+			var result:String ;
+			for (var i:int = 0; i < $arr.length; i++) 
+			{
+				if( $arr[ i ] != null )
+				{
+					result = $arr[ i ] ;
+					break ;
+				}
+			}
+			return result ;
+		}
+		
 		private function generateID():String
 		{
 			var timeStamp:Number = new Date().time ;
 			var rnd:Number = Math.random() * 100000000000000;
 			var id:String = timeStamp.toString( 36 ) + "_" + rnd.toString( 36 ) ;
 			return id ;
+		}
+		
+		/**
+		 * 打日志
+		 * @param $logType 日志类型 notify是记录动作 exectime是记录时长
+		 * @param $module 模块 
+		 * @param $op     操作动作
+		 * @param $code   编码
+		 * @param $info   必要信息
+		 */
+		private function startPingback( $logType:String, $module:String, $op:String, $code:String, $info:Object):void
+		{
+			var logObj:Object = {};
+			//1 log类型
+			logObj.type = $logType ;
+			//2  应用的名字
+			logObj.app = getValidUrlInTurn([ _parameters.appId, _parameters.flashId]);
+			//3  模块的名字
+			logObj.module = $module ;
+			//4 操作动作
+			logObj.op = $op ;
+			//5 编码
+			logObj.code = $code ;
+			//6 加载目标的url
+			logObj.target = _curLoadingUrl ;
+			//7 解析info里的信息存下来
+			if( $info )
+			{
+				for (var i:String in $info) 
+				{
+					if( $info[ i ] != null )
+					{
+						logObj[ i ] = $info[ i ] ;
+					}
+				}
+			}
+			//8 如果flashI 和 appId 相同则表示当前是小游戏，否则就是游戏框架
+			if( _parameters.flashId == _parameters.appId 
+				|| _parameters.flashUrl == _parameters.appUrl )
+			{
+				logObj.flashType = "tiny" ;
+			}
+			else
+			{
+				logObj.flashType = "framework" ;
+			}
+			//9 发送日志
+			Pingback.getInstance().startPingBack( logObj ) ;
 		}
 		
 		//----------------------------------------funs 5 dispose-------------------------------------------------//
