@@ -9,16 +9,23 @@ package com.vox.game.load
 	
 	import flash.display.Loader;
 	import flash.display.Stage;
+	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
+	import flash.events.UncaughtErrorEvent;
+	import flash.media.SoundMixer;
+	import flash.net.URLVariables;
 	import flash.system.ApplicationDomain;
+	import flash.system.Capabilities;
 	import flash.system.LoaderContext;
+	import flash.ui.Mouse;
 	import flash.utils.Timer;
 	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
+	import flash.utils.setTimeout;
 	
 	import spark.primitives.Path;
 
@@ -31,7 +38,23 @@ package com.vox.game.load
 		//----------------------------------------attrs 0 const--------------------------------------------------//
 		private const LogType_ExecTime          :String = "exectime";
 		private const LogType_Notify            :String = "notify";
+		
+		/**操作： 开始加载*/
+		private const LogOp_LoadStart           :String = "LoadStart";
+		/**操作： 加载成功*/
 		private const LogOp_LoadComplete        :String = "LoadComplete" ;
+		/**操作： 心跳*/
+		private const LogOp_LoadHeartBeat       :String = "LoadHeartBeat";
+		/**操作: 加载失败*/
+		private const LogOp_LoadFailed          :String = "LoadFailed";
+		/**操作: UncaughtError*/
+		private const LogOp_UncaughtError       :String = "UncaughtError";
+		/**操作: 加载超时*/
+		private const LogOp_LoadTimeout         :String = "LoadTimeout";
+		
+		
+		/**超时毫秒时长*/
+		private const TimeoutMS                 :Number = 20000 ;
 		//----------------------------------------attrs 1 ui-----------------------------------------------------//
 		
 		//----------------------------------------attrs 2 status-------------------------------------------------//
@@ -49,7 +72,7 @@ package com.vox.game.load
 		/**实际目标小游戏的路径*/
 		private var _gameURL                    :String ;
 		/**什么的总数 ?*/
-		private var _totalNum                   :int ;
+		private var _LoaderTotalNum                   :int ;
 		private var _curLoadingUrl              :String ;
 		private var _curLoadItemIndex           :uint ;
 		private var _timeoutFlag                :int ;
@@ -58,7 +81,11 @@ package com.vox.game.load
 		/**缓存记数 */
 		private var _cacheCount                 :int = 0;
 		/**加载的 id 肖建军@2015-10-22*/
-		private var _loadProcessID              :Number ;
+		private var _loadProcessID              :String ;
+		/**当前进度*/
+		private var _curProgress                :int ;
+		/**上一次记录的进度*/
+		private var _lastRecordProgress         :int = 0;
 		
 		//----------------------------------------attrs 4 model--------------------------------------------------//
 		private var _handler                    :ISWFLoadProxyHandler ;
@@ -127,6 +154,38 @@ package com.vox.game.load
 			_loaderContext.parameters = _parameters ;
 			// 8 开始加载库
 			this.startLoadLib();
+			// 9 调用onLoadStart
+			if( _handler != null ) _handler.onLoadStart() ;
+			// 10 记录时间戳
+			_startLoadTime = getTimer() ;
+			// 11 生成加载进程ID
+			_loadProcessID = getGenerateID() ;
+			// 12 启动超时计时器
+			startTimeout( true ) ;
+			// 13 启动心跳计时器
+			runHeartBeatTimer( true ) ;
+			// 14 打日志
+			var json:Object ;
+			if( _parameters != null ) 
+			{
+				try
+				{
+					json = JSON.parse( _parameters.json ) ;
+				} 
+				catch(error:Error) 
+				{
+					json = null ;
+				}
+				_curLoadingUrl = getValidUrlInTurn([ _gameURL, _parameters.flashURL, _parameters.flashUrl ]);
+			}
+			var capabilities:URLVariables = new URLVariables( Capabilities.serverString ) ;
+			startPingback( LogType_Notify, _loadType, LogOp_LoadStart, null, 
+				{
+					i1: _loadCount,
+					loadProcessID: _loadProcessID,
+					json: json,
+					info: capabilities 
+				});
 		}
 		
 		//----------------------------------------funs 1 init-----------------------------------------------------//
@@ -146,7 +205,7 @@ package com.vox.game.load
 			}
 			else
 			{
-				//loadLibByURLs();
+				loadLibByURLs( flashGameCoreUrl, flashLogicUrl, flashEngineUrl ) ;
 			}
 		}
 		
@@ -210,10 +269,11 @@ package com.vox.game.load
 			loadLibByURLs( $dict( _configSwfURLArr[ 0 ] ), $dict( _configSwfURLArr[ 1 ] ), $dict( _configSwfURLArr[ 2 ] ) ) ;
 		}
 		
+		private var _loadUrlArr:Array ;
 		/**知道多个lib swf的url地址，然后依次加载*/
 		private function loadLibByURLs( $gameUrl:String, $logiceUrl:String, $engineUrl:String ):void
 		{
-			var loadArr:Array = [];
+			_loadUrlArr = [];
 			//获取Logic的地址及版本号
 			if( $logiceUrl != null )
 			{
@@ -225,7 +285,7 @@ package com.vox.game.load
 						$logiceUrl = URLUtil.addVersion( $logiceUrl, String( new Date().time ) ) ;
 					}
 				}
-				loadArr.push( $logiceUrl ) ;
+				_loadUrlArr.push( $logiceUrl ) ;
 			}
 			
 			//获取Engine的地址及版本号
@@ -238,15 +298,56 @@ package com.vox.game.load
 						$engineUrl = URLUtil.addVersion( $engineUrl, String( new Date().time ) ) ;
 					}
 				}
-				loadArr.push( $engineUrl ) ;
+				_loadUrlArr.push( $engineUrl ) ;
 			}
 			
-			//如果appId有值，且appId和flashId不等
+			//如果appId有值，且appId和flashId不等,  表示是框架游戏， 去直接加载 游戏目标swf 肖建军不明白@2015-10-23
 			if( _parameters.appId != null && _parameters.flashId != _parameters.appId )
 			{
-				_totalNum = 1 ;
+				_LoaderTotalNum = 1 ;
 				startLoadMainGameSwf();
 			}
+			else
+			{
+				_curLoadingUrl = $gameUrl ;
+				CONFIG::RELEASE
+				{
+					if( _loadCount > 1 )
+					{
+						_curLoadingUrl = URLUtil.addVersion( _curLoadingUrl, String( new Date().time ) ) ;
+					}
+				}
+				_loadUrlArr.unshift( _curLoadingUrl ) ;
+				_LoaderTotalNum = _loadUrlArr.length + 1 ;
+				loadOne();
+			}
+		}
+		
+		private function loadOne( $loader:Loader = null ):void
+		{
+			if( $loader != null )
+			{
+				_curLoadItemIndex ++ ;
+				$loader.contentLoaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError ) ;
+				_loaders.push( $loader )　;
+			}
+			
+			if( _loadUrlArr && _loadUrlArr.length == 0 )
+			{
+				onLoadLibComplete() ;
+			}
+			else
+			{
+				_curLoadingUrl = _loadUrlArr.shift() ;
+				LoadUtil.loaderLoadWithoutSandbox( _curLoadingUrl, loadOne, onLoadError, onLoadProgress, _loaderContext ) ;
+			}
+		}
+		
+		private function onLoadLibComplete():void
+		{
+			startTimeout( false ) ;
+			_cacheTimer.reset() ;
+			startLoadMainGameSwf() ;
 		}
 		
 		private function onUrlLoaderLoadErrorHandler( $evt:Event ):void
@@ -291,7 +392,19 @@ package com.vox.game.load
 		 */
 		private function onCacheTimer(event:TimerEvent):void
 		{
-			
+			if( _cacheTimer.currentCount == 1 )
+			{
+				_lastRecordProgress = _curProgress ;
+				_cacheCount = 0 ;
+			}
+			else
+			{
+				if( _lastRecordProgress != _curProgress && _curProgress != 100 )
+				{
+					_cacheCount ++ ;
+					_lastRecordProgress = _curProgress ;
+				}
+			}
 		}
 		
 		private function onLoadTargetGameComplete( $loader:Loader ):void
@@ -338,7 +451,94 @@ package com.vox.game.load
 				$loader.content.addEventListener( "AftGameResultDis", onGameResultHandler ) ;
 				$loader.content.addEventListener( Event.REMOVED_FROM_STAGE, onContentOffStagedHandler ) ;
 				$loader.content.addEventListener( "VoxLoggerTracer", onVoxLoggerTracer ) ;
+				//设置加载器进程id
+				if( $loader.content.hasOwnProperty("loadProcessID"))
+				{
+					$loader.content["loadProcessID"] = _loadProcessID ;
+				}
 			}
+			
+			//8 监听未抓取错误
+			$loader.contentLoaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError ) ;
+			_loaders.push( $loader ) ;
+			if( _handler != null ) _handler.onLoadComplete( $loader ) ;
+		}
+		
+		private function onUncaughtError( $evt:UncaughtErrorEvent ):void
+		{
+			$evt.stopPropagation() ;
+			var json:String = "" ;
+			var code:String = "" ;
+			if( _parameters != null )
+			{
+				json = _parameters.json ;
+				code = _parameters.flashId + "," + _parameters.appId ;
+			}
+			//取错误类型和错误ID
+			var regCode:RegExp = /Error #(\d+)/ ;
+			var regCodeResult:Object ;
+			var errorType:String ;
+			var errorCode:int = 0 ;
+			var errorMessage:String ;
+			var errorStackTrace:String = $evt.error.getStackTrace(); 
+			if( $evt.error is Error )
+			{
+				var error:Error = $evt.error as Error ;
+				errorType = "Error" ;
+				errorCode = error.errorID ;
+				errorMessage = error.message ;
+				if( !errorStackTrace )
+				{
+					errorStackTrace = $evt.error.getStackTrace();
+				}
+				if( errorCode <= 0 )
+				{
+					regCodeResult = regCode.exec( error.message ) ;
+					if( regCodeResult != null )
+					{
+						errorCode = int( regCodeResult[1] ) ;
+					}
+				}
+			}
+			else if( $evt.error is ErrorEvent )
+			{
+				var errorEvent:ErrorEvent = $evt.error as ErrorEvent ;
+				errorType = "ErrorEvent" ;
+				errorCode = errorEvent.errorID ;
+				errorMessage = errorEvent.text ;
+				if( errorCode <= 0 )
+				{
+					regCodeResult = regCode.exec( errorEvent.text ) ;
+					if( regCodeResult != 0 )
+					{
+						errorCode = int( regCodeResult[ 1 ] ) ;
+					}
+				}
+			}
+			else
+			{
+				errorType = "Unknown" ;
+				if( $evt.error != null )
+				{
+					errorMessage = String( $evt.error ) ;
+					regCodeResult = regCode.exec( $evt.error.toString ) ;
+					if( regCodeResult != null )
+					{
+						errorCode = int( regCodeResult[ 1 ] ) ;
+					}
+				}
+			}
+			//打印日志
+			var capabilities:URLVariables = new URLVariables( Capabilities.serverString ) ;
+			startPingback( LogType_Notify, LogOp_UncaughtError, LogOp_UncaughtError,"",
+				{   i0: errorCode,
+					s1: errorMessage,
+					loadProcessID: _loadProcessID,
+					appCode: code,
+					json: json,
+					stackTrace: errorStackTrace,
+					info: capabilities
+				});
 		}
 		
 		private function runHeartBeatTimer( $value:Boolean ):void
@@ -348,40 +548,98 @@ package com.vox.game.load
 				_heartBeatTimer.removeEventListener( TimerEvent.TIMER, onBeatHeartHandler ) 
 				_heartBeatTimer.reset() ;
 			}
+			else
+			{
+				_heartBeatTimer.reset() ;
+				_heartBeatTimer.addEventListener( TimerEvent.TIMER, onBeatHeartHandler ) ;
+				_heartBeatTimer.start() ;
+			}
 		}
 		
-		private function onLoadProgress(event:ProgressEvent):void
+		private function startTimeout( $value:Boolean ):void
 		{
+			if( _timeoutFlag > 0 ) clearTimeout( _timeoutFlag ) ;
+			if( $value )
+			{
+				_timeoutFlag = setTimeout( onTimeout, TimeoutMS )　;
+			}
+		}
+		
+		private function onTimeout():void
+		{
+			startTimeout( false ) ;
+			_beLoading = false ;
+			_cacheTimer.reset() ;
+			startPingback( LogType_ExecTime, _loadType, LogOp_LoadTimeout, "timeout",
+				{
+					i0:getTimer() - _startLoadTime,
+					i1:_loadCount,
+					loadProcessID: _loadProcessID
+				});
+			if( _handler != null ) _handler.onLoadError( new ErrorEvent( ErrorEvent.ERROR, false, false, LogOp_LoadTimeout ) ) ;
+		}
+		
+		private function onLoadProgress( $evt:ProgressEvent):void
+		{
+			//启动超时计时器
+			startTimeout( true )　;
 			
+			//记录进度 满进度是100 取整数
+			_curProgress = int( $evt.bytesLoaded / $evt.bytesTotal * 100 ) ; 
+			//调用回调 
+			if( _handler != null ) 
+			{
+				_handler.onLoadProgress( _curLoadingUrl, _curLoadItemIndex, _LoaderTotalNum, $evt.bytesLoaded, $evt.bytesTotal ) ;
+			}
 		}
 		
 		/**游戏初始化成功*/
 		private function onGameIntializeSuccessfulCbk( $evt:Event ):void
 		{
-			
+			_gameInitOK = true ;
+			updateBackgroundMusic() ;
 		}
 		
 		/**阿分提游戏，获取到了游戏结果时. */
 		private function onGameResultHandler( $evt:Event ):void
 		{
-			
+			if( _handler != null )
+			{
+				var result:Object = $evt["result"];
+				var level:int = result.level ;
+				var success:Boolean = ( result.success == "true" ) ;
+				var vitality:int = result.vitality ;
+				_handler.onGameEnd( result ) ;
+			}
+			//销毁自身
+			this.dispose();
 		}
 		
 		/**输入输出错误的回调*/
 		private function onLoadIOError( $evt:IOErrorEvent ):void
 		{
-			
+			//1 删除timeout
+			startTimeout( false ) ;
+			//2 加载状态设为false
+			_beLoading = false ;
+			//3 停止心跳
+			runHeartBeatTimer( false ) ;
+			//4 打日志
+			startPingback( LogType_ExecTime, _loadType, LogOp_LoadFailed, "io_error",
+				{
+					i0:getTimer() - _startLoadTime,
+					i1: _loadCount ,
+					s1: $evt.text ,
+					loadProgressID: _loadProcessID
+				});
+			if( _handler != null )　_handler.onLoadError( $evt ) ;
 		}
 		
 		/**当content从Staging移出时*/
 		private function onContentOffStagedHandler( $evt:Event ):void
 		{
-			
-		}
-		
-		private function onVoxLoggerTracer():void
-		{
-			
+			//销毁自身
+			this.dispose() ;
 		}
 		
 		/**
@@ -390,11 +648,100 @@ package com.vox.game.load
 		 */
 		private function onBeatHeartHandler( $evt:TimerEvent ):void
 		{
-			
+			startPingback( LogType_ExecTime, null, LogOp_LoadHeartBeat, null,
+				{
+					i0: _heartBeatTimer.currentCount * 20000,
+					loadProcessID: _loadProcessID 
+				});
 		}
 		
 		
 		//----------------------------------------funs 4 tool ---------------------------------------------------//
+		private function onVoxLoggerTracer( $evt:Event ):void
+		{
+			$evt.stopPropagation() ;
+			if( $evt.hasOwnProperty("data"))
+			{
+				try
+				{
+					this.traceLog( $evt["data"]);
+				} 
+				catch(error:Error) 
+				{
+					
+				}
+			}
+		}
+		
+		private function traceLog( $log:* ):void
+		{
+			if( typeof $log == "object" )
+			{
+				Pingback.getInstance().startPingBack( $log ) ;
+			}
+		}
+		
+		/**错误事件的总回调入口方法*/
+		private function onLoadError( $evt:Event ):void
+		{
+			if( $evt is IOErrorEvent )　onLoadIOError( $evt as IOErrorEvent ) ;
+			else if( $evt is SecurityErrorEvent ) onLoadSecurityError( $evt as SecurityErrorEvent ) ;
+		}
+		
+		/**专门处理安全事件的回调*/
+		private function onLoadSecurityError( $evt:SecurityErrorEvent ):void
+		{
+			//清除timeout
+			startTimeout( false ) ;
+			//加载状态设为false
+			_beLoading = false ;
+			//停止心跳
+			runHeartBeatTimer( false )　;
+			//打日志
+			startPingback( LogType_ExecTime, _loadType, LogOp_LoadFailed, "security_error",
+				{
+					i0:getTimer() - _startLoadTime,
+					i1: _loadCount,
+					s1: $evt.text,
+					loadProcessID: _loadProcessID 
+				} ) ;
+			if( _handler != null ) _handler.onLoadError( $evt ) ;
+		}
+		
+		private var _bgMusicOn:Boolean = true;
+
+		/**是否开启背景音乐*/
+		public function get bgMusicOn():Boolean
+		{
+			return _bgMusicOn;
+		}
+
+		/**
+		 * @param value 是否开启背景音乐
+		 */
+		public function set bgMusicOn(value:Boolean):void
+		{
+			if( value == _bgMusicOn ) return ; //如果状态没变， 则不用设置
+			_bgMusicOn = value;
+			updateBackgroundMusic() ;
+		}
+
+		
+		private function updateBackgroundMusic():void
+		{
+			if( !_gameInitOK ) return ; //如果游戏没有初始完毕，则不执行下面
+			var domain:ApplicationDomain = _loaderContext.applicationDomain ;
+			//获取其中对ContextManager的定义
+			if( !domain.hasDefinition("com.vox.future.manager::ContextManager")) return ;
+			var contextManager:Class = domain.getDefinition("com.vox.future.manager::ContextManager") as Class ;
+			//通过ContextManager的静态方法获取GameManager的对象引用
+			if( !contextManager.context ) return ;
+			var gameManager:* = contextManager.context.getObjectByType("com.vox.future.manager::GameManager");
+			//设置声音属性
+			if( gameManager != null )　gameManager.setGameVoice( _bgMusicOn ) ;
+			
+		}
+		
 		/**按顺序获取数组中的有效字符串 肖建军@2015-10-22*/
 		private function getValidUrlInTurn( $arr:Array ):String
 		{
@@ -410,7 +757,7 @@ package com.vox.game.load
 			return result ;
 		}
 		
-		private function generateID():String
+		private function getGenerateID():String
 		{
 			var timeStamp:Number = new Date().time ;
 			var rnd:Number = Math.random() * 100000000000000;
@@ -466,8 +813,43 @@ package com.vox.game.load
 			Pingback.getInstance().startPingBack( logObj ) ;
 		}
 		
-		//----------------------------------------funs 5 dispose-------------------------------------------------//
+		private function runCacheTimer( $value:Boolean ):void
+		{
+			if( !$value )
+			{
+				_cacheTimer.removeEventListener(TimerEvent.TIMER, onCacheTimer ) ;
+				_cacheTimer.reset() ;
+			}
+		}
 		
-
+		//----------------------------------------funs 5 dispose-------------------------------------------------//
+		private function dispose():void
+		{
+			if( _loaderContext == null ) return ;
+			while( _loaders.length > 0 )
+			{
+				var loader:Loader = _loaders.pop() ;
+				loader.contentLoaderInfo.uncaughtErrorEvents.removeEventListener( UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError ) ;
+			}
+			_loaderContext = null ;
+			
+			//清除cacheTimer
+			runCacheTimer( false ) ;
+			_cacheTimer = null ;
+			
+			//清除心跳Timer
+			runHeartBeatTimer( false ) ;
+			_heartBeatTimer = null ;
+			
+			//清除其它常量
+			_handler = null ;
+			_parameters = null ;
+			
+		   	//关闭所有声音
+			SoundMixer.stopAll() ;
+			
+			//显示鼠标 （因为在一些游戏中会隐藏鼠标）
+			Mouse.show() ;
+		}
 	}
 }
