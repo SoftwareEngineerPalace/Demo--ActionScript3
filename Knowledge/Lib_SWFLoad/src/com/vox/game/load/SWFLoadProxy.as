@@ -98,7 +98,11 @@ package com.vox.game.load
 	
 		
 		//----------------------------------------attrs 5 getter setter------------------------------------------//
-		
+		/** 获取加载上下文 */
+		public function get loaderContext():LoaderContext
+		{
+			return _loaderContext;
+		}
 		
 		//----------------------------------------funs 0 API-----------------------------------------------------//
 		public function SWFLoadProxy( $stage:Stage, $handler:ISWFLoadProxyHandler, $param:Object = null, $loadType:String = "Preloader" )
