@@ -20,7 +20,7 @@ package com.vox.utils
 			_parameters = $parameters ;
 		}
 		
-		public function wrapFlashURL( $path:String ):void
+		public function wrapFlashURL( $path:String ):String
 		{
 			var swfPath:String = wrapRelativeSwfPath( $path ) as String ;
 			var imgURL:String = wrapImgDomain( swfPath ) ;

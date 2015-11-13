@@ -2,6 +2,8 @@
 <flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
   <includeClasses>
     <classEntry path="com.vox.utils.PathUtils"/>
+    <classEntry path="com.vox.utils.interfaces.ILoadUtilHandler"/>
+    <classEntry path="com.vox.utils.URLUtil"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
